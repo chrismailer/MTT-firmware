@@ -135,7 +135,7 @@ int main(void)
 	HAL_UART_Transmit(&huart4, (uint8_t *)&toggleStates, sizeof(toggleStates), 10);
 	HAL_UART_Transmit(&huart4, (uint8_t *)&buttonStates, sizeof(buttonStates), 10);
 
-	HAL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
+	HAL_GPIO_TogglePin(LED_2_GPIO_Port, LED_2_Pin);
 
 	HAL_Delay(100);
     /* USER CODE END WHILE */

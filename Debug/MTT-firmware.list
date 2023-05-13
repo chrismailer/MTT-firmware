@@ -527,8 +527,8 @@ int main(void)
  80005e4:	480b      	ldr	r0, [pc, #44]	; (8000614 <main+0x148>)
  80005e6:	f002 fbf4 	bl	8002dd2 <HAL_UART_Transmit>
 
-	HAL_GPIO_TogglePin(LED_1_GPIO_Port, LED_1_Pin);
- 80005ea:	2102      	movs	r1, #2
+	HAL_GPIO_TogglePin(LED_2_GPIO_Port, LED_2_Pin);
+ 80005ea:	2104      	movs	r1, #4
  80005ec:	480a      	ldr	r0, [pc, #40]	; (8000618 <main+0x14c>)
  80005ee:	f001 ff30 	bl	8002452 <HAL_GPIO_TogglePin>
 
