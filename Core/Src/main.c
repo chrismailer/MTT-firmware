@@ -28,12 +28,16 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+typedef enum {
+    WAITING_FOR_HEADER,
+	WAITING_FOR_DATA,
+    RESPONDING
+} fsm;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define DATA_LEN 3
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,15 +50,21 @@ ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
 UART_HandleTypeDef huart4;
-DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
-volatile uint16_t potValues[4];
-volatile bool toggleStates[4];
-volatile bool buttonStates[4];
+volatile uint16_t pot_values[4];
+volatile bool switch_states[8];
+volatile bool LED_states[8];
+volatile bool SEG_states[11];
 const uint8_t adcChannelCount = 4;
-const uint16_t header = 0xAA55;
-volatile uint8_t UART4_rxBuffer[12] = {0};
+const uint16_t header = 0xaa;
+uint8_t UART4_rxBuffer[DATA_LEN] = {0};
+char message[] = "Transmission\r\n"; /* Message to be transmitted through UART */
+
+fsm state = WAITING_FOR_HEADER;
+
+uint8_t cmd_id = 0x00;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -104,25 +114,46 @@ int main(void)
   MX_ADC1_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_UART_Transmit(&huart4, (uint8_t *)message, strlen(message), 10);
+  HAL_UART_Receive_IT(&huart4, UART4_rxBuffer, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	// char buffer[100];
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)potValues, adcChannelCount);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)pot_values, adcChannelCount);
 	// Get toggle states
-	toggleStates[0] = HAL_GPIO_ReadPin(TOG_0_GPIO_Port, TOG_0_Pin);
-	toggleStates[1] = HAL_GPIO_ReadPin(TOG_1_GPIO_Port, TOG_1_Pin);
-	toggleStates[2] = HAL_GPIO_ReadPin(TOG_2_GPIO_Port, TOG_2_Pin);
-	toggleStates[3] = HAL_GPIO_ReadPin(TOG_3_GPIO_Port, TOG_3_Pin);
-	// Get button states inverted
-	buttonStates[0] = !HAL_GPIO_ReadPin(SW_0_GPIO_Port, SW_0_Pin);
-	buttonStates[1] = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);
-	buttonStates[2] = !HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);
-	buttonStates[3] = !HAL_GPIO_ReadPin(SW_3_GPIO_Port, SW_3_Pin);
+	switch_states[0] = HAL_GPIO_ReadPin(TOG_0_GPIO_Port, TOG_0_Pin);
+	switch_states[1] = HAL_GPIO_ReadPin(TOG_1_GPIO_Port, TOG_1_Pin);
+	switch_states[2] = HAL_GPIO_ReadPin(TOG_2_GPIO_Port, TOG_2_Pin);
+	switch_states[3] = HAL_GPIO_ReadPin(TOG_3_GPIO_Port, TOG_3_Pin);
+	// Get button states (inverted because normally high)
+	switch_states[4] = !HAL_GPIO_ReadPin(SW_0_GPIO_Port, SW_0_Pin);
+	switch_states[5] = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);
+	switch_states[6] = !HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);
+	switch_states[7] = !HAL_GPIO_ReadPin(SW_3_GPIO_Port, SW_3_Pin);
+	// Update LED states
+	HAL_GPIO_WritePin(LED_0_GPIO_Port, LED_0_Pin, LED_states[0]);
+	HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, LED_states[1]);
+	HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, LED_states[2]);
+	HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, LED_states[3]);
+	HAL_GPIO_WritePin(LED_4_GPIO_Port, LED_4_Pin, LED_states[4]);
+	HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, LED_states[5]);
+	HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, LED_states[6]);
+	HAL_GPIO_WritePin(LED_7_GPIO_Port, LED_7_Pin, LED_states[7]);
+	// Update Segment Display states
+	HAL_GPIO_WritePin(SEG_G0_GPIO_Port, SEG_G0_Pin, SEG_states[0]);
+	HAL_GPIO_WritePin(SEG_G1_GPIO_Port, SEG_G1_Pin, SEG_states[1]);
+	HAL_GPIO_WritePin(SEG_G2_GPIO_Port, SEG_G2_Pin, SEG_states[2]);
+	HAL_GPIO_WritePin(SEG_A_GPIO_Port, SEG_A_Pin, SEG_states[3]);
+	HAL_GPIO_WritePin(SEG_B_GPIO_Port, SEG_B_Pin, SEG_states[4]);
+	HAL_GPIO_WritePin(SEG_C_GPIO_Port, SEG_C_Pin, SEG_states[5]);
+	HAL_GPIO_WritePin(SEG_D_GPIO_Port, SEG_D_Pin, SEG_states[6]);
+	HAL_GPIO_WritePin(SEG_E_GPIO_Port, SEG_E_Pin, SEG_states[7]);
+	HAL_GPIO_WritePin(SEG_F_GPIO_Port, SEG_F_Pin, SEG_states[8]);
+	HAL_GPIO_WritePin(SEG_G_GPIO_Port, SEG_G_Pin, SEG_states[9]);
+	HAL_GPIO_WritePin(SEG_DP_GPIO_Port, SEG_DP_Pin, SEG_states[10]);
 	// Test transmit
 	// sprintf(buffer, "P0=%d\tP1=%d\tP2=%d\tP3=%d\t", potValues[0], potValues[1], potValues[2], potValues[3]);
 	// HAL_UART_Transmit(&huart4, (uint8_t *)buffer, strlen(buffer), 10);
@@ -130,14 +161,42 @@ int main(void)
 	// HAL_UART_Transmit(&huart4, (uint8_t *)buffer, strlen(buffer), 10);
 	// sprintf(buffer, "B0=%d\tB1=%d\tB2=%d\tB3=%d\r\n", buttonStates[0], buttonStates[1], buttonStates[2], buttonStates[3]);
 	// HAL_UART_Transmit(&huart4, (uint8_t *)buffer, strlen(buffer), 10);
-	HAL_UART_Transmit(&huart4, (uint8_t *)&header, sizeof(header), 10);
-	HAL_UART_Transmit(&huart4, (uint8_t *)&potValues, sizeof(potValues), 10);
-	HAL_UART_Transmit(&huart4, (uint8_t *)&toggleStates, sizeof(toggleStates), 10);
-	HAL_UART_Transmit(&huart4, (uint8_t *)&buttonStates, sizeof(buttonStates), 10);
+//	HAL_UART_Transmit(&huart4, (uint8_t *)&header, sizeof(header), 10);
+//	HAL_UART_Transmit(&huart4, (uint8_t *)&potValues, sizeof(potValues), 10);
+//	HAL_UART_Transmit(&huart4, (uint8_t *)&toggleStates, sizeof(toggleStates), 10);
+//	HAL_UART_Transmit(&huart4, (uint8_t *)&buttonStates, sizeof(buttonStates), 10);
 
-	HAL_GPIO_TogglePin(LED_2_GPIO_Port, LED_2_Pin);
-
-	HAL_Delay(100);
+	switch(state) {
+	case RESPONDING: // handle command
+		// handle received data
+		for (int i = 7; i >= 0; i--) {
+			LED_states[i] = (UART4_rxBuffer[0] >> i) & 1;
+		}
+		for (int i = 7; i >= 0; i--) {
+			SEG_states[i] = (UART4_rxBuffer[1] >> i) & 1;
+		}
+		for (int i = 2; i >= 0; i--) {
+			SEG_states[i+8] = (UART4_rxBuffer[2] >> i) & 1;
+		}
+		// convert switch bools to unit8_t
+		uint8_t switch_states_uint8 = 0;
+		for (int i = 0; i < 8; i++) {
+			if (switch_states[i]) {
+				switch_states_uint8 |= (1 << i);
+			}
+		}
+		// do something with data
+		HAL_UART_Transmit(&huart4, (uint8_t *)&header, sizeof(header), 10);
+		HAL_UART_Transmit(&huart4, (uint8_t *)&pot_values, sizeof(pot_values), 10);
+		HAL_UART_Transmit(&huart4, (uint8_t *)&switch_states_uint8, sizeof(switch_states_uint8), 10);
+//		HAL_UART_Transmit(&huart4, (uint8_t *)message, strlen(message), 10);
+		// enable Rx callback
+		state = WAITING_FOR_HEADER;
+		HAL_UART_Receive_IT(&huart4, UART4_rxBuffer, 1);
+		break;
+	default:
+		break;
+	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -306,12 +365,8 @@ static void MX_DMA_Init(void)
 
   /* DMA controller clock enable */
   __HAL_RCC_DMA2_CLK_ENABLE();
-  __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
-  /* DMA1_Stream2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
   /* DMA2_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
@@ -385,7 +440,29 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	switch(state) {
+	case WAITING_FOR_HEADER:
+		// check for recognised header byte
+		switch(UART4_rxBuffer[0]) {
+		case 0xaa: // recognised header
+			cmd_id = UART4_rxBuffer[0];
+			HAL_UART_Receive_IT(&huart4, UART4_rxBuffer, DATA_LEN); // now wait for data
+			state = WAITING_FOR_DATA;
+			break;
+		default: // no recognised header, wait for next byte
+			HAL_UART_Receive_IT(&huart4, UART4_rxBuffer, 1);
+			break;
+		}
+		break;
+	case WAITING_FOR_DATA: // data received... handle and reply
+		state = RESPONDING;
+		break;
+	default:
+		break;
+	}
+}
 /* USER CODE END 4 */
 
 /**
