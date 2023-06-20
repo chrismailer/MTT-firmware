@@ -57,7 +57,7 @@ volatile bool switch_states[8];
 volatile bool LED_states[8];
 volatile bool SEG_states[11];
 const uint8_t adcChannelCount = 4;
-const uint16_t header = 0xaa;
+const uint8_t header = 0xaa;
 uint8_t UART4_rxBuffer[DATA_LEN] = {0};
 char message[] = "Transmission\r\n"; /* Message to be transmitted through UART */
 
@@ -185,11 +185,10 @@ int main(void)
 				switch_states_uint8 |= (1 << i);
 			}
 		}
-		// do something with data
+		// send reply
 		HAL_UART_Transmit(&huart4, (uint8_t *)&header, sizeof(header), 10);
 		HAL_UART_Transmit(&huart4, (uint8_t *)&pot_values, sizeof(pot_values), 10);
 		HAL_UART_Transmit(&huart4, (uint8_t *)&switch_states_uint8, sizeof(switch_states_uint8), 10);
-//		HAL_UART_Transmit(&huart4, (uint8_t *)message, strlen(message), 10);
 		// enable Rx callback
 		state = WAITING_FOR_HEADER;
 		HAL_UART_Receive_IT(&huart4, UART4_rxBuffer, 1);

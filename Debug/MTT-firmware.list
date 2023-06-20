@@ -29,23 +29,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  12 .ARM.attributes 00000030  00000000  00000000  0002001c  2**0
                   CONTENTS, READONLY
- 13 .debug_info   0000a0ff  00000000  00000000  0002004c  2**0
+ 13 .debug_info   0000a0fa  00000000  00000000  0002004c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_abbrev 00001892  00000000  00000000  0002a14b  2**0
+ 14 .debug_abbrev 00001892  00000000  00000000  0002a146  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_aranges 000007b8  00000000  00000000  0002b9e0  2**3
+ 15 .debug_aranges 000007b8  00000000  00000000  0002b9d8  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_ranges 00000730  00000000  00000000  0002c198  2**3
+ 16 .debug_ranges 00000730  00000000  00000000  0002c190  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_macro  00021692  00000000  00000000  0002c8c8  2**0
+ 17 .debug_macro  00021692  00000000  00000000  0002c8c0  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   00009fe7  00000000  00000000  0004df5a  2**0
+ 18 .debug_line   00009fe7  00000000  00000000  0004df52  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    000cf615  00000000  00000000  00057f41  2**0
+ 19 .debug_str    000cf615  00000000  00000000  00057f39  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .comment      00000050  00000000  00000000  00127556  2**0
+ 20 .comment      00000050  00000000  00000000  0012754e  2**0
                   CONTENTS, READONLY
- 21 .debug_frame  00001ee4  00000000  00000000  001275a8  2**2
+ 21 .debug_frame  00001ee4  00000000  00000000  001275a0  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -822,10 +822,10 @@ int main(void)
  8000836:	dde7      	ble.n	8000808 <main+0x32c>
 			}
 		}
-		// do something with data
+		// send reply
 		HAL_UART_Transmit(&huart4, (uint8_t *)&header, sizeof(header), 10);
  8000838:	230a      	movs	r3, #10
- 800083a:	2202      	movs	r2, #2
+ 800083a:	2201      	movs	r2, #1
  800083c:	4910      	ldr	r1, [pc, #64]	; (8000880 <main+0x3a4>)
  800083e:	4811      	ldr	r0, [pc, #68]	; (8000884 <main+0x3a8>)
  8000840:	f002 fba5 	bl	8002f8e <HAL_UART_Transmit>
@@ -841,7 +841,6 @@ int main(void)
  8000854:	2201      	movs	r2, #1
  8000856:	480b      	ldr	r0, [pc, #44]	; (8000884 <main+0x3a8>)
  8000858:	f002 fb99 	bl	8002f8e <HAL_UART_Transmit>
-//		HAL_UART_Transmit(&huart4, (uint8_t *)message, strlen(message), 10);
 		// enable Rx callback
 		state = WAITING_FOR_HEADER;
  800085c:	4b0b      	ldr	r3, [pc, #44]	; (800088c <main+0x3b0>)
