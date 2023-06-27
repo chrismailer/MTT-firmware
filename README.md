@@ -7,10 +7,10 @@ Written/compiled with STM32CubeIDE using the HAL library: https://www.st.com/en/
 1. Clone this repo
 ### Flashing the board
 2. Open the `MTT-Firmware` folder in STM32CubeIDE
-3. Connect to the debugger port with the ST-Link attached
+3. Connect to the **debugger port** with the ST-Link attached
 ### Connecting the board to the PC
 4. Remove the ST-Link debugger
-5. Plug the micro USB into the non-debugger port on the board
+5. Plug the micro USB into the **non-debugger port** on the board
 ### Installing the MTT Simulink Library
 6. Move the `MTT Simulink Library` folder onto the MATLAB path
    - Windows — %USERPROFILE%/Documents/MATLAB
@@ -18,8 +18,13 @@ Written/compiled with STM32CubeIDE using the HAL library: https://www.st.com/en/
 9. Refresh the Library Browser with `refresh(lb)` in the MATLAB Command Window
 ### Running the example
 10. Open `example.slx`
-11. Double click the `MTT Basic I/O` block and select the correct serial port. The board should be plugged in before opening Simulink.
+11. Double click the `MTT Basic I/O` block and select the correct serial port. The board should be plugged in **before** opening Simulink.
 12. Run the model and adjust the sliders, buttons, toggles, and potentiometers and ensure everything is responding.
+
+## Troubleshooting
+- Make sure the USB is plugged into the non-debugger micro-USB port.
+### Serial Port not appearing in the MATLAB block port selection dropdown.
+- The board must be connected to the PC **before** opening MATLAB otherwise the serial port might not show up.
 
 ## Serial Communication Protocol
 Communication is structured in a request-response format with a rate of 115200 baud. A request is a message from the PC to the MTT and a response is a message from the MTT back to the PC. The packet header determines the type of request-response. This communication protocol was chosen as it allows the PC to set the communication rate and other request-reponse messages can be added without breaking existing ones (Important if multiple courses will be using it).
